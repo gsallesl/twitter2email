@@ -220,7 +220,7 @@ def createEmail(name, text, date, timeline, link):
     else:
         datetime = time.gmtime()
     datehdr = time.strftime("%a, %d %b %Y %H:%M:%S -0000", datetime)
-    useragenthdr = "rss2email"
+    useragenthdr = "twitter2email"
     extraheaders = {'Date': datehdr, 'User-Agent': useragenthdr, 'X-RSS-Feed': timeline , 'X-RSS-URL': link}
     contenttype = 'plain'
     #print "Date: %s \nFrom: %s \nTo: %s \nSubject: %s \nContent: %s \nContenttype: %s\nLink: %s" % (datehdr, fromhdr, tohdr, subjecthdr, text, contenttype, link)
@@ -261,7 +261,7 @@ class MyHTMLParser(HTMLParser):
         if tag == "a":
             timeFlag=False
             for attr, value in attrs:
-                if attr == 'class' and "ProfileTweet-timestamp" in value.split():
+                if attr == 'class' and "tweet-timestamp" in value.split():
                     timeFlag=True
                 if attr == 'title' and timeFlag:
                     # ex: 6:19 PM - 6 Aug 2014
@@ -271,7 +271,7 @@ class MyHTMLParser(HTMLParser):
                     timeFlag=False
         if tag == "p":
             for attr,value in attrs:
-                if attr == 'class' and "ProfileTweet-text" in value.split():
+                if attr == 'class' and "tweet-text" in value.split():
                     self.flag=True
     def handle_endtag(self, tag):
         if self.Finish:
@@ -299,10 +299,14 @@ def fetchFeed(tuser, last):
     # XXX: dirty...
     headers = {'Accept-Language': 'en'}
     r = requests.get(url,headers=headers)
-    content = r.json()['items_html']
-    parser = MyHTMLParser()
-    parser.configure(tuser, last)
-    parser.feed(content)
+    try:
+        content = r.json()['items_html']
+        #print content
+        parser = MyHTMLParser()
+        parser.configure(tuser, last)
+        parser.feed(content)
+    except ValueError:
+        print("t2e: Something went wrong while trying to parse \"%s\" feed, does this user still exist?" % tuser)
 
     # Junk.
     #with codecs.open("file.html", "w+", encoding="utf8") as textfile:
